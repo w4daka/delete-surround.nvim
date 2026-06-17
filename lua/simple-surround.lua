@@ -72,5 +72,43 @@ M.find_positions = function(text, open_char, close_char)
 	-- 2つの特定した位置を返す
 	return left_idx, right_idx
 end
+-- lua/simple-surround.nvim (Task 4 追記部分)
+
+-- 特定した左右のインデックスを元に、バッファから括弧を削除する関数
+M.delete_surround = function(buf_id, line_num, left_idx, right_idx)
+	print("\n===== [削除デバッグ開始] =====")
+	print(string.format("初期座標 -> 左括弧の位置: %d, 右括弧の位置: %d", left_idx, right_idx))
+
+	-- NeovimのAPI用に、行番号を0-basedに変換 (1行目なら 0)
+	local api_line = line_num - 1
+
+	------------------------------------------------------------
+	-- 1. 先に「右側（閉じ括弧）」を削除する
+	------------------------------------------------------------
+	-- right_idx文字目を消すため、startは right_idx - 1、endは right_idx
+	local r_start = right_idx - 1
+	local r_end = right_idx
+
+	print(string.format("[ステップ1] 右側を削除: API引数(col %d から %d まで)", r_start, r_end))
+	vim.api.nvim_buf_set_text(buf_id, api_line, r_start, api_line, r_end, { "" })
+
+	-- 【完全可視化ログ：ここがステップ2の答えだ！】
+	print("[確認] 右側を消した。この時、左側の括弧の位置は...")
+	print(
+		string.format("  -> 依然として %d のまま！ズレていない！だから安全に消せる。", left_idx)
+	)
+
+	------------------------------------------------------------
+	-- 2. 次に「左側（開き括弧）」を削除する
+	------------------------------------------------------------
+	-- left_idx文字目を消すため、startは left_idx - 1、endは left_idx
+	local l_start = left_idx - 1
+	local l_end = left_idx
+
+	print(string.format("[ステップ2] 左側を削除: API引数(col %d から %d まで)", l_start, l_end))
+	vim.api.nvim_buf_set_text(buf_id, api_line, l_start, api_line, l_end, { "" })
+
+	print("===== [削除デバッグ終了] 全ての括弧の削除が成功！ =====\n")
+end
 
 return M
